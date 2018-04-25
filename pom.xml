@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>xyz.jetdrone</groupId>
   <artifactId>blockapps.ba</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-
   <name>vertx-blockapps-rest</name>
   <description>Vert.x BA implementation in Vert.x</description>
 
   <properties>
     <vertx.version>3.5.1</vertx.version>
   </properties>
+
+   <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <distribution>repo</distribution>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+    </license>
+  </licenses>
 
   <dependencies>
     <dependency>
@@ -35,8 +40,57 @@
       <version>${vertx.version}</version>
       <scope>provided</scope>
     </dependency>
-  </dependencies>
 
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-lang-groovy</artifactId>
+      <version>${vertx.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-lang-ruby</artifactId>
+      <version>${vertx.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-lang-js</artifactId>
+      <version>${vertx.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-rx-java</artifactId>
+      <version>${vertx.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-rx-java2</artifactId>
+      <version>${vertx.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-lang-kotlin</artifactId>
+      <version>${vertx.version}</version>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-unit</artifactId>
+      <version>${vertx.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
   <build>
     <pluginManagement>
       <plugins>

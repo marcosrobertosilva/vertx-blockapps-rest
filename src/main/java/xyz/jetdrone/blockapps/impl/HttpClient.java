@@ -1,10 +1,26 @@
-package xyz.jetdrone.blockapps.api.impl;
+/*
+ * Copyright 2018 Red Hat, Inc.
+ *
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  and Apache License v2.0 which accompanies this distribution.
+ *
+ *  The Eclipse Public License is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ *  The Apache License v2.0 is available at
+ *  http://www.opensource.org/licenses/apache2.0.php
+ *
+ *  You may elect to redistribute this code under either of these licenses.
+ */
+package xyz.jetdrone.blockapps.impl;
 
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -123,12 +139,20 @@ class HttpClient {
   }
 
   public static Buffer urlEncode(JsonObject json) {
-    Buffer buffer = Buffer.buffer();
+
+    final Buffer buffer = Buffer.buffer();
+
+    if (json == null) {
+      return buffer;
+    }
+
     boolean empty = true;
 
     try {
       for (Map.Entry<String, ?> kv : json) {
-        if (!empty) {
+        if (empty) {
+          buffer.appendByte((byte) '?');
+        } else {
           buffer.appendByte((byte) '&');
         }
         buffer.appendString(URLEncoder.encode(kv.getKey(), "UTF-8"));
@@ -154,7 +178,9 @@ class HttpClient {
       key = URLEncoder.encode(key, "UTF-8");
 
       for (Object v : json) {
-        if (!empty) {
+        if (empty) {
+          buffer.appendByte((byte) '?');
+        } else {
           buffer.appendByte((byte) '&');
         }
         buffer.appendString(key);
@@ -172,6 +198,11 @@ class HttpClient {
   }
 
   public static String urlEncode(String value) {
+
+    if (value == null) {
+      return "";
+    }
+
     try {
       return URLEncoder.encode(value, "UTF-8");
     } catch (UnsupportedEncodingException e) {
@@ -214,14 +245,79 @@ class HttpClient {
       if (fetch.failed()) {
         handler.handle(Future.failedFuture(fetch.cause()));
       } else {
-        JsonObject json;
-        try {
-          json = fetch.result().jsonObject();
-        } catch (RuntimeException e) {
-          handler.handle(Future.failedFuture(e));
+        if (fetch.result().is("application/json")) {
+          JsonObject json;
+          try {
+            json = fetch.result().jsonObject();
+          } catch (RuntimeException e) {
+            handler.handle(Future.failedFuture(e));
+            return;
+          }
+          handler.handle(Future.succeededFuture(json));
           return;
         }
-        handler.handle(Future.succeededFuture(json));
+        // unknown type
+        handler.handle(Future.failedFuture("Unknown content type: " + fetch.result().getHeader("Content-Type")));
+      }
+    };
+  }
+
+  public static Handler<AsyncResult<HttpResponse>> array(Handler<AsyncResult<JsonArray>> handler) {
+    return fetch -> {
+      if (fetch.failed()) {
+        handler.handle(Future.failedFuture(fetch.cause()));
+      } else {
+        if (fetch.result().is("application/json")) {
+          JsonArray json;
+          try {
+            json = fetch.result().jsonArray();
+          } catch (RuntimeException e) {
+            handler.handle(Future.failedFuture(e));
+            return;
+          }
+          handler.handle(Future.succeededFuture(json));
+          return;
+        }
+        // unknown type
+        handler.handle(Future.failedFuture("Unknown content type: " + fetch.result().getHeader("Content-Type")));
+      }
+    };
+  }
+
+  public static Handler<AsyncResult<HttpResponse>> text(Handler<AsyncResult<String>> handler) {
+    return text("UTF8", handler);
+  }
+
+  public static Handler<AsyncResult<HttpResponse>> text(String enc, Handler<AsyncResult<String>> handler) {
+    return fetch -> {
+      if (fetch.failed()) {
+        handler.handle(Future.failedFuture(fetch.cause()));
+      } else {
+        Buffer buffer = fetch.result().body();
+        if (buffer == null) {
+          handler.handle(Future.succeededFuture());
+        } else {
+          if (fetch.result().is("application/json")) {
+            try {
+              handler.handle(Future.succeededFuture(Json.decodeValue(buffer, String.class)));
+            } catch (RuntimeException e) {
+              handler.handle(Future.failedFuture(e));
+              return;
+            }
+          } else {
+            handler.handle(Future.succeededFuture(buffer.toString(enc)));
+          }
+        }
+      }
+    };
+  }
+
+  public static Handler<AsyncResult<HttpResponse>> binary(Handler<AsyncResult<Buffer>> handler) {
+    return fetch -> {
+      if (fetch.failed()) {
+        handler.handle(Future.failedFuture(fetch.cause()));
+      } else {
+        handler.handle(Future.succeededFuture(fetch.result().body()));
       }
     };
   }
